@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía Interactiva: Seguro de Alquiler de Autos en Cuba</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Application Structure Plan: 
+        Una aplicación de una sola página con una barra de navegación superior fija que permite a los usuarios saltar a diferentes secciones.
+        1. Encabezado/Navegación: Título y enlaces a secciones principales: "Visión General", "Empresas", "Coberturas", "Exclusiones", "Costos", "Incidentes", "Requisitos", "Recomendaciones".
+        2. Visión General: Introducción y marco legal.
+        3. Empresas de Alquiler: Presentación de las principales empresas (REX, CUBACAR, HAVANAUTOS, VIA) con un selector para ver detalles específicos y una tabla comparativa.
+        4. Coberturas del Seguro: Explicación del seguro "a todo riesgo", tabla comparativa de coberturas por empresa.
+        5. Exclusiones Clave: Lista de exclusiones comunes y tabla de exclusiones específicas por empresa, usando iconos.
+        6. Costos y Franquicias: Gráficos de Chart.js para comparar costos diarios y suplementos por edad. Comparación visual de franquicias. Información sobre métodos de pago.
+        7. En Caso de Incidente: Guía paso a paso, énfasis en el reporte policial.
+        8. Requisitos para Alquilar: Listas de requisitos de edad, licencia, documentación y condiciones.
+        9. Recomendaciones Finales: Consejos clave para los arrendatarios.
+        Esta estructura fue elegida para facilitar la navegación temática del contenido denso del informe, permitiendo a los usuarios acceder rápidamente a la información que más les interesa y comparar aspectos clave entre las diferentes empresas estatales. Los elementos interactivos como selectores y gráficos buscan mejorar la comprensión y el engagement.
+    -->
+    <!-- Visualization & Content Choices:
+        - Report Info: Principales empresas de alquiler. Goal: Comparar. Viz: Selector de pestañas y tabla HTML. Interaction: Clic en pestaña muestra info específica. Justification: Facilita la comparación. Library: HTML, JS.
+        - Report Info: Coberturas (Tabla 1 del informe). Goal: Comparar. Viz: Tabla HTML. Interaction: Estática. Justification: Claridad. Library: HTML.
+        - Report Info: Exclusiones (Tabla 2 del informe). Goal: Informar. Viz: Tabla HTML con iconos Unicode. Interaction: Estática. Justification: Claridad. Library: HTML.
+        - Report Info: Costos y Franquicias. Goal: Comparar visualmente. Viz: Gráficos de barras Chart.js para costos y suplementos; tarjetas para franquicias. Interaction: Dinámica (gráficos). Justification: Impacto visual para datos numéricos. Library: Chart.js.
+        - Report Info: Procedimientos (incidentes, requisitos). Goal: Informar. Viz: Listas HTML estilizadas. Interaction: Estática. Justification: Claridad para info procesal. Library: HTML.
+        CONFIRMACIÓN: NO SVG graphics used. NO Mermaid JS used.
+    -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 350px; } }
+        .nav-link { transition: color 0.3s ease, border-bottom-color 0.3s ease; }
+        .nav-link:hover, .nav-link.active { color: #0D9488; border-bottom-color: #0D9488; }
+        .tab-button { transition: background-color 0.3s ease, color 0.3s ease; }
+        .tab-button.active { background-color: #0D9488; color: white; }
+        .table th, .table td { border: 1px solid #E5E7EB; padding: 8px; text-align: left; }
+        .table th { background-color: #F3F4F6; }
+        .icon { font-size: 1.2em; margin-right: 0.5em; }
+    </style>
+</head>
+<body class="bg-beige-50 text-neutral-800">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <h1 class="text-2xl font-bold text-teal-700">Seguro de Alquiler en Cuba</h1>
+                <nav class="hidden md:flex space-x-4">
+                    <a href="#vision-general" class="nav-link border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-neutral-600 hover:text-teal-600">Visión General</a>
+                    <a href="#empresas" class="nav-link border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-neutral-600 hover:text-teal-600">Empresas</a>
+                    <a href="#coberturas" class="nav-link border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-neutral-600 hover:text-teal-600">Coberturas</a>
+                    <a href="#exclusiones" class="nav-link border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-neutral-600 hover:text-teal-600">Exclusiones</a>
+                    <a href="#costos" class="nav-link border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-neutral-600 hover:text-teal-600">Costos</a>
+                    <a href="#incidentes" class="nav-link border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-neutral-600 hover:text-teal-600">Incidentes</a>
+                    <a href="#requisitos" class="nav-link border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-neutral-600 hover:text-teal-600">Requisitos</a>
+                    <a href="#recomendaciones" class="nav-link border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-neutral-600 hover:text-teal-600">Recomendaciones</a>
+                </nav>
+                <button id="mobile-menu-button" class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-neutral-400 hover:text-teal-500 hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-teal-500">
+                    <span class="sr-only">Abrir menú principal</span>
+                    <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                    <svg class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div id="mobile-menu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#vision-general" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-neutral-600 hover:text-teal-600 hover:bg-neutral-50">Visión General</a>
+                <a href="#empresas" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-neutral-600 hover:text-teal-600 hover:bg-neutral-50">Empresas</a>
+                <a href="#coberturas" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-neutral-600 hover:text-teal-600 hover:bg-neutral-50">Coberturas</a>
+                <a href="#exclusiones" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-neutral-600 hover:text-teal-600 hover:bg-neutral-50">Exclusiones</a>
+                <a href="#costos" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-neutral-600 hover:text-teal-600 hover:bg-neutral-50">Costos</a>
+                <a href="#incidentes" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-neutral-600 hover:text-teal-600 hover:bg-neutral-50">Incidentes</a>
+                <a href="#requisitos" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-neutral-600 hover:text-teal-600 hover:bg-neutral-50">Requisitos</a>
+                <a href="#recomendaciones" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-neutral-600 hover:text-teal-600 hover:bg-neutral-50">Recomendaciones</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <section id="vision-general" class="mb-12 scroll-mt-20">
+            <h2 class="text-3xl font-semibold text-neutral-700 mb-6">Visión General del Seguro de Alquiler</h2>
+            <div class="bg-white p-6 rounded-lg shadow space-y-4">
+                <p class="text-lg">Bienvenido a la guía interactiva sobre el seguro obligatorio para el alquiler de vehículos de empresas estatales en Cuba. Esta sección te ofrece una introducción al tema, destacando la importancia de comprender este seguro y su marco legal. El objetivo es clarificar las obligaciones, coberturas y exclusiones para asegurar una experiencia de alquiler sin contratiempos.</p>
+                <p>El mercado de alquiler de autos en Cuba está controlado por empresas estatales como REX, CUBACAR, HAVANAUTOS y VIA. Estas entidades exigen un seguro de "relevo de responsabilidad" que es obligatorio y no sustituible por seguros externos (como los de tarjetas de crédito). Este seguro es un componente inseparable del contrato de alquiler.</p>
+                <h3 class="text-xl font-semibold text-neutral-700 mt-4">Fundamento Legal y Obligatoriedad</h3>
+                <p>La obligación del seguro se basa en la legislación nacional cubana, incluyendo decretos-leyes y resoluciones ministeriales. Este "relevo de responsabilidad" es mandatorio para todos los clientes y busca proteger los activos del estado (vehículos) y gestionar responsabilidades con terceros. Los términos son dictados por la política estatal y no son negociables.</p>
+            </div>
+        </section>
+
+        <section id="empresas" class="mb-12 scroll-mt-20">
+            <h2 class="text-3xl font-semibold text-neutral-700 mb-6">Principales Empresas Estatales de Alquiler</h2>
+            <div class="bg-white p-6 rounded-lg shadow">
+                 <p class="text-lg mb-4">Conocer las principales empresas estatales de alquiler en Cuba es el primer paso para entender sus ofertas de seguros. Estas empresas son las operadoras directas de las flotas. Aunque agencias privadas facilitan reservas, el contrato final y el seguro se gestionan directamente con la empresa estatal al recoger el vehículo.</p>
+                <div class="mb-6 border-b border-neutral-200">
+                    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                        <button data-tab="rex" class="tab-button active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-neutral-500 hover:text-teal-600 hover:border-teal-500">REX</button>
+                        <button data-tab="cubacar" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-neutral-500 hover:text-teal-600 hover:border-teal-500">CUBACAR</button>
+                        <button data-tab="havanautos" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-neutral-500 hover:text-teal-600 hover:border-teal-500">HAVANAUTOS</button>
+                        <button data-tab="via" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-neutral-500 hover:text-teal-600 hover:border-teal-500">VIA</button>
+                    </nav>
+                </div>
+                <div id="company-details" class="space-y-4">
+                    </div>
+            </div>
+        </section>
+
+        <section id="coberturas" class="mb-12 scroll-mt-20">
+            <h2 class="text-3xl font-semibold text-neutral-700 mb-6"> <span class="icon">🛡️</span>Coberturas Detalladas del Seguro</h2>
+            <div class="bg-white p-6 rounded-lg shadow space-y-4">
+                <p class="text-lg">El seguro obligatorio en Cuba se describe generalmente como "a todo riesgo", ofreciendo una amplia protección. Esta sección detalla qué cubre exactamente este seguro, desde daños al vehículo hasta responsabilidad civil por daños a terceros. Es crucial entender el alcance para saber qué esperar.</p>
+                <p>La cobertura de "relevo de responsabilidad" exime al titular del contrato de responsabilidad financiera en caso de daños al vehículo alquilado o accidentes, así como daños a la propiedad de terceros o integridad física, siempre que se cumplan los términos del contrato.</p>
+                
+                <h3 class="text-xl font-semibold text-neutral-700 mt-4">Principales Coberturas Incluidas:</h3>
+                <ul class="list-disc list-inside space-y-1 text-neutral-600">
+                    <li>Daños directos al vehículo alquilado.</li>
+                    <li>Daños por incendio.</li>
+                    <li>Pérdida por robo total o parcial del vehículo.</li>
+                    <li>Daños por colisiones o vuelcos.</li>
+                    <li>Daños causados por catástrofes naturales (huracanes, inundaciones).</li>
+                    <li>Responsabilidad civil por daños a la propiedad de terceros.</li>
+                    <li>Responsabilidad civil por lesiones o muerte a terceros.</li>
+                </ul>
+                 <p class="mt-2 text-sm text-neutral-500">Existen límites de responsabilidad civil: hasta 15,000 USD por daños a propiedad de terceros y hasta 5,000 USD por persona (límite total 25,000 USD) por lesiones/muerte a terceros.</p>
+
+                <h3 class="text-xl font-semibold text-neutral-700 mt-6">Comparativa de Coberturas por Compañía Estatal</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full table">
+                        <thead>
+                            <tr>
+                                <th>Cobertura</th>
+                                <th class="text-center">CUBACAR</th>
+                                <th class="text-center">HAVANAUTOS</th>
+                                <th class="text-center">REX</th>
+                                <th class="text-center">VIA</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Daños al Vehículo</td><td class="text-center text-green-600">Sí</td><td class="text-center text-green-600">Sí</td><td class="text-center text-green-600">Sí</td><td class="text-center text-green-600">Sí</td></tr>
+                            <tr><td>Incendio</td><td class="text-center text-green-600">Sí</td><td class="text-center text-green-600">Sí</td><td class="text-center text-green-600">Sí</td><td class="text-center text-green-600">Sí</td></tr>
+                            <tr><td>Robo (Total/Parcial)</td><td class="text-center text-green-600">Sí</td><td class="text-center text-green-600">Sí</td><td class="text-center text-green-600">Sí</td><td class="text-center text-green-600">Sí</td></tr>
+                            <tr><td>Colisión/Vuelco</td><td class="text-center text-green-600">Sí</td><td class="text-center text-green-600">Sí</td><td class="text-center text-green-600">Sí</td><td class="text-center text-green-600">Sí</td></tr>
+                            <tr><td>Catástrofes Naturales</td><td class="text-center text-green-600">Sí</td><td class="text-center text-green-600">Sí</td><td class="text-center text-green-600">Sí</td><td class="text-center text-green-600">Sí</td></tr>
+                            <tr><td>Daños a Propiedad Ajena</td><td class="text-center text-green-600">Sí</td><td class="text-center text-green-600">Sí</td><td class="text-center text-green-600">Sí</td><td class="text-center text-green-600">Sí</td></tr>
+                            <tr><td>Lesiones/Muerte a Terceros</td><td class="text-center text-green-600">Sí</td><td class="text-center text-green-600">Sí</td><td class="text-center text-green-600">Sí</td><td class="text-center text-green-600">Sí</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                 <p class="mt-2 text-sm text-neutral-500">*Se asume que los límites de responsabilidad civil (15k/5k/25k USD) aplican a todas, según información general.</p>
+            </div>
+        </section>
+
+        <section id="exclusiones" class="mb-12 scroll-mt-20">
+            <h2 class="text-3xl font-semibold text-neutral-700 mb-6"><span class="icon">⚠️</span>Exclusiones Clave del Seguro</h2>
+            <div class="bg-white p-6 rounded-lg shadow space-y-4">
+                <p class="text-lg">Tan importante como saber qué cubre el seguro, es entender qué situaciones o daños están explícitamente excluidos. Estas exclusiones pueden anular la cobertura y dejar al arrendatario con la responsabilidad total de los costos. Presta especial atención a esta sección.</p>
+                
+                <h3 class="text-xl font-semibold text-neutral-700 mt-4">Exclusiones Comunes Universales:</h3>
+                <ul class="list-disc list-inside space-y-1 text-neutral-600">
+                    <li><span class="icon">🚫</span>Robo de neumáticos y equipos de audio.</li>
+                    <li><span class="icon">🍷</span>Conducción bajo la influencia de alcohol, drogas o medicamentos no permitidos.</li>
+                    <li><span class="icon">👤</span>Conducción por personas no autorizadas en el contrato de alquiler.</li>
+                    <li><span class="icon">💥</span>Daños por actuaciones negligentes, conducción irresponsable o violaciones de leyes.</li>
+                    <li><span class="icon">🔑</span>Pérdida o daño de la llave del vehículo (generalmente con costo directo).</li>
+                    <li><span class="icon">⛽</span>Suministro de combustible incorrecto.</li>
+                     <li><span class="icon">🏎️</span>Uso del vehículo para actividades ilícitas o carreras.</li>
+                </ul>
+
+                <h3 class="text-xl font-semibold text-neutral-700 mt-6">Tabla de Exclusiones y Penalizaciones Específicas (Ejemplos):</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full table">
+                        <thead>
+                            <tr>
+                                <th>Exclusión/Penalización</th>
+                                <th class="text-center">CUBACAR</th>
+                                <th class="text-center">HAVANAUTOS</th>
+                                <th class="text-center">REX</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Robo de Neumáticos/Audio</td><td class="text-center text-red-600">Excluido</td><td class="text-center text-red-600">Excluido</td><td class="text-center text-red-600">Excluido</td></tr>
+                            <tr><td>Pérdida Contrato/Doc.</td><td class="text-center">N/E</td><td class="text-center">N/E</td><td class="text-center">$50 USD</td></tr>
+                            <tr><td>Pérdida/Daño de Llave</td><td class="text-center">N/E</td><td class="text-center">Cliente Paga</td><td class="text-center">Según Averías</td></tr>
+                            <tr><td>Retorno Sucio Excesivo</td><td class="text-center">N/E</td><td class="text-center">$100 USD</td><td class="text-center">N/E</td></tr>
+                            <tr><td>Colocación Pegatinas</td><td class="text-center">N/E</td><td class="text-center">$200 USD</td><td class="text-center">$200 USD</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="mt-2 text-sm text-neutral-500">N/E = No especificado en el informe. Esta tabla es ilustrativa; siempre consulta el contrato final.</p>
+            </div>
+        </section>
+
+        <section id="costos" class="mb-12 scroll-mt-20">
+            <h2 class="text-3xl font-semibold text-neutral-700 mb-6"><span class="icon">💰</span>Costos del Seguro y Franquicias</h2>
+            <div class="bg-white p-6 rounded-lg shadow space-y-4">
+                <p class="text-lg">Entender los costos asociados al seguro es fundamental para presupuestar tu alquiler. Esta sección desglosa los costos diarios, los suplementos por edad y, crucialmente, la aplicación de franquicias (deducibles), que pueden variar significativamente entre compañías.</p>
+                
+                <div class="grid md:grid-cols-2 gap-8 mt-6">
+                    <div>
+                        <h3 class="text-xl font-semibold text-neutral-700 mb-3">Costo Diario Base del Seguro</h3>
+                        <div class="chart-container">
+                            <canvas id="costoDiarioChart"></canvas>
+                        </div>
+                        <p class="text-sm text-neutral-500 mt-2 text-center">Comparación de costos diarios base (USD/CUC). Havanautos suele incluirlo en la tarifa final.</p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-neutral-700 mb-3">Suplemento por Edad del Conductor</h3>
+                         <div class="chart-container">
+                            <canvas id="suplementoEdadChart"></canvas>
+                        </div>
+                        <p class="text-sm text-neutral-500 mt-2 text-center">Costo adicional para conductores jóvenes (21-24) o mayores (76-80).</p>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-semibold text-neutral-700 mt-8 mb-4">Franquicias (Deducibles)</h3>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="border border-neutral-200 p-4 rounded-lg">
+                        <h4 class="font-semibold text-teal-700">REX</h4>
+                        <p class="text-2xl font-bold">Sin Franquicia</p>
+                        <p class="text-sm text-neutral-500">Si se cumple el contrato, no hay pago por daños.</p>
+                    </div>
+                    <div class="border border-neutral-200 p-4 rounded-lg">
+                        <h4 class="font-semibold">VIA (Rent a Car Vía)</h4>
+                        <p class="text-2xl font-bold">~350 USD</p>
+                        <p class="text-sm text-neutral-500">Responsable si es culpable.</p>
+                    </div>
+                    <div class="border border-neutral-200 p-4 rounded-lg">
+                        <h4 class="font-semibold">HAVANAUTOS</h4>
+                        <p class="text-2xl font-bold">~350 USD</p>
+                        <p class="text-sm text-neutral-500">Responsable si es culpable.</p>
+                    </div>
+                     <div class="border border-neutral-200 p-4 rounded-lg">
+                        <h4 class="font-semibold">CUBACAR</h4>
+                        <p class="text-2xl font-bold">Hasta ~350 USD</p>
+                        <p class="text-sm text-neutral-500">Implícito, si se prueba culpabilidad.</p>
+                    </div>
+                </div>
+                <p class="mt-4 text-sm text-neutral-600">La presencia o ausencia de franquicia es un diferenciador financiero clave.</p>
+
+            </div>
+        </section>
+
+        <section id="incidentes" class="mb-12 scroll-mt-20">
+            <h2 class="text-3xl font-semibold text-neutral-700 mb-6">🚨 En Caso de Incidente (Accidente, Robo)</h2>
+            <div class="bg-white p-6 rounded-lg shadow space-y-4">
+                <p class="text-lg">Saber cómo actuar en caso de un incidente es crucial para que la cobertura del seguro sea válida. Esta sección detalla las obligaciones del cliente, incluyendo la notificación a las autoridades y la importancia del reporte policial.</p>
+                <h3 class="text-xl font-semibold text-neutral-700 mt-4">Procedimiento Obligatorio:</h3>
+                <ol class="list-decimal list-inside space-y-2 text-neutral-600">
+                    <li><strong>Notificación Inmediata:</strong> Contactar SIN DEMORA tanto a la compañía de alquiler (CUBACAR, REX, etc.) como a la policía local (PNR). Los números de asistencia suelen estar en el contrato.</li>
+                    <li><strong>Obtener Reporte Policial:</strong> Un informe policial formal ("denuncia policial" o "comprobante de la policía") o un informe de inspectores (TRANSTUR/SEPSA) es INDISPENSABLE. Se exige al liquidar el contrato.</li>
+                    <li><strong>No Admitir Culpa ni Hacer Acuerdos:</strong> Espera la investigación oficial.</li>
+                    <li><strong>Documentar Todo:</strong> Toma fotos (si es seguro), anota detalles, nombres y contactos si hay testigos.</li>
+                </ol>
+                <p class="font-semibold text-red-600 mt-3">La falta de un reporte policial puede invalidar TODA la cobertura del seguro, haciéndote responsable de TODOS los daños.</p>
+                <h3 class="text-xl font-semibold text-neutral-700 mt-4">Consecuencias de Culpabilidad o Incumplimiento:</h3>
+                <p>Si se prueba tu culpabilidad, serás responsable de pagar hasta el monto del deducible (si aplica). Si incumples el contrato (negligencia, alcohol/drogas, conductor no autorizado), perderás todos los derechos del seguro, serás responsable de TODOS los daños y podrías ser declarado "Cliente No Grato", restringiendo futuros alquileres.</p>
+            </div>
+        </section>
+
+        <section id="requisitos" class="mb-12 scroll-mt-20">
+            <h2 class="text-3xl font-semibold text-neutral-700 mb-6">📋 Requisitos para Alquilar y Condiciones</h2>
+            <div class="bg-white p-6 rounded-lg shadow space-y-4">
+                <p class="text-lg">Alquilar un auto en Cuba implica cumplir con ciertos requisitos de edad, licencia y documentación. Además, hay condiciones específicas sobre la entrega y devolución del vehículo, así como penalizaciones por incumplimiento. Esta sección te prepara para estos aspectos.</p>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-xl font-semibold text-neutral-700 mt-4">Edad y Licencia del Conductor:</h3>
+                        <ul class="list-disc list-inside space-y-1 text-neutral-600">
+                            <li><strong>Edad Mínima:</strong> Generalmente 21 años. Para categorías de lujo/deportivas (REX), puede ser 25 años.</li>
+                            <li><strong>Edad Máxima:</strong> Generalmente 80 años (tarifa estándar hasta 75, suplemento 76-80).</li>
+                            <li><strong>Experiencia de Licencia:</strong> Mínimo 2 años (3 años para REX Deportiva). Si la licencia es reciente, presenta la anterior para demostrar experiencia.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-neutral-700 mt-4">Documentación Requerida (Originales):</h3>
+                        <ul class="list-disc list-inside space-y-1 text-neutral-600">
+                            <li>Pasaporte válido.</li>
+                            <li>Licencia de conducir física válida (no digital).</li>
+                            <li>Copia impresa del voucher de reserva.</li>
+                            <li>El titular de la reserva DEBE recoger el vehículo.</li>
+                        </ul>
+                    </div>
+                </div>
+                <h3 class="text-xl font-semibold text-neutral-700 mt-6">Condiciones de Entrega y Devolución:</h3>
+                 <ul class="list-disc list-inside space-y-1 text-neutral-600">
+                    <li><strong>Combustible:</strong> Generalmente se entrega lleno (se cobra ese primer tanque). Se puede devolver vacío (no hay reembolso por combustible no usado). Verifica política específica.</li>
+                    <li><strong>Devolución (Drop-off):</strong> Se puede devolver en otra oficina de la misma compañía, pero aplica cargo por "drop-off" según distancia.</li>
+                    <li><strong>Devolución Tardía:</strong> Día de alquiler = 24h. Gracia de 4-5 horas. Excederla implica cargo de 1 día extra a tarifa pública. No devolver en 24h tras vencimiento puede generar denuncia por robo.</li>
+                </ul>
+                <h3 class="text-xl font-semibold text-neutral-700 mt-4">Penalizaciones Comunes por Incumplimiento:</h3>
+                <p>Pérdida de documentos, daños a accesorios, modificaciones no autorizadas, remolcar, uso ilícito, pérdida de llaves/matrículas, maltrato del vehículo, no llevar a mantenimiento, devolución excesivamente sucia, daños a asientos, sobrecarga.</p>
+            </div>
+        </section>
+        
+        <section id="recomendaciones" class="scroll-mt-20">
+            <h2 class="text-3xl font-semibold text-neutral-700 mb-6">💡 Recomendaciones Finales</h2>
+            <div class="bg-teal-50 border-l-4 border-teal-500 p-6 rounded-lg shadow space-y-3">
+                <p class="text-lg text-teal-800">Para una experiencia de alquiler de auto en Cuba sin problemas, considera estas recomendaciones clave. Estar bien informado y preparado es tu mejor aliado.</p>
+                <ul class="list-disc list-inside space-y-2 text-teal-700">
+                    <li><strong>Lee el Contrato Detenidamente:</strong> Es EL documento legal. Entiende cada cláusula ANTES de firmar.</li>
+                    <li><strong>Verifica Métodos de Pago:</strong> Confirma con el agente al recoger el auto. Lleva varias opciones (tarjetas y efectivo USD/EUR).</li>
+                    <li><strong>Conductores Autorizados Únicamente:</strong> Solo los listados en el contrato pueden conducir. NUNCA bajo influencia de alcohol/drogas.</li>
+                    <li><strong>Reporta Incidentes Inmediatamente:</strong> A la arrendadora Y a la policía. El reporte policial es VITAL.</li>
+                    <li><strong>Presupuesta TODO:</strong> Costo diario del seguro, posible franquicia, combustible inicial, posibles suplementos y cargos extra.</li>
+                    <li><strong>Cuida el Vehículo:</strong> Mantén su condición, evita penalizaciones por daños o mal uso.</li>
+                    <li><strong>Guarda Toda la Documentación:</strong> Contrato, seguro, reportes policiales. Consérvalos hasta que todo esté liquidado.</li>
+                </ul>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-neutral-800 text-neutral-300 text-center p-6 mt-12">
+        <p>&copy; <span id="currentYear"></span> Guía Interactiva de Seguros de Alquiler en Cuba. Información basada en análisis de fuentes públicas.</p>
+        <p class="text-xs mt-1">Esta aplicación es una herramienta informativa y no constituye asesoramiento legal. Siempre consulte el contrato oficial.</p>
+    </footer>
+
+    <script>
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            mobileMenuButton.querySelectorAll('svg').forEach(svg => svg.classList.toggle('hidden'));
+        });
+        
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                // Cierra el menú móvil si está abierto
+                if (!mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.add('hidden');
+                    mobileMenuButton.querySelectorAll('svg').forEach(svg => svg.classList.toggle('hidden'));
+                }
+                // Actualiza el enlace activo en escritorio (opcional, para mejor UX)
+                navLinks.forEach(l => l.classList.remove('active', 'text-teal-600', 'border-teal-500'));
+                link.classList.add('active', 'text-teal-600', 'border-teal-500');
+            });
+        });
+
+
+        // Datos de las empresas (simplificado del informe)
+        const companiesData = {
+            rex: {
+                name: "REX",
+                description: "REX se destaca por ofrecer vehículos de gama más alta y un servicio orientado a estándares internacionales, a menudo para segmentos de lujo o negocios. Es conocido por su seguro 'a todo riesgo sin franquicia' si se cumplen las condiciones del contrato.",
+                logoChar: "R",
+                color: "bg-red-600"
+            },
+            cubacar: {
+                name: "CUBACAR",
+                description: "CUBACAR es un proveedor extendido con numerosas agencias en toda la isla, ofreciendo amplia accesibilidad. Su seguro es 'prácticamente a todo riesgo', pero puede implicar una franquicia si se prueba culpabilidad.",
+                logoChar: "C",
+                color: "bg-blue-600"
+            },
+            havanautos: {
+                name: "HAVANAUTOS",
+                description: "Establecida en 1982, HAVANAUTOS posee una de las flotas más grandes y una extensa red de puntos de alquiler, con asistencia en carretera 24h. Su seguro incluye una franquicia (aprox. 350 USD) si el cliente es culpable.",
+                logoChar: "H",
+                color: "bg-green-600"
+            },
+            via: {
+                name: "VIA (Rent a Car Vía)",
+                description: "VIA es otro proveedor estatal significativo. Su seguro es 'a todo riesgo' pero incluye una franquicia de aproximadamente 350 USD si el cliente es culpable de los daños.",
+                logoChar: "V",
+                color: "bg-yellow-500"
+            }
+        };
+
+        const companyTabs = document.querySelectorAll('.tab-button');
+        const companyDetailsContainer = document.getElementById('company-details');
+
+        function updateCompanyDetails(companyKey) {
+            const company = companiesData[companyKey];
+            companyDetailsContainer.innerHTML = `
+                <div class="flex items-start space-x-4 p-4 border border-neutral-200 rounded-lg bg-neutral-50">
+                    <div class="${company.color} text-white h-12 w-12 flex items-center justify-center rounded-full text-2xl font-bold">${company.logoChar}</div>
+                    <div>
+                        <h3 class="text-2xl font-semibold text-neutral-700">${company.name}</h3>
+                        <p class="text-neutral-600 mt-1">${company.description}</p>
+                    </div>
+                </div>
+            `;
+            companyTabs.forEach(tab => {
+                tab.classList.remove('active', 'border-teal-500', 'text-teal-600');
+                tab.classList.add('border-transparent', 'text-neutral-500');
+                if (tab.dataset.tab === companyKey) {
+                    tab.classList.add('active', 'border-teal-500', 'text-teal-600');
+                    tab.classList.remove('border-transparent', 'text-neutral-500');
+                }
+            });
+        }
+        
+        companyTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                updateCompanyDetails(tab.dataset.tab);
+            });
+        });
+
+        // Inicializar con la primera empresa
+        updateCompanyDetails('rex');
+
+        // Gráfico de Costo Diario
+        const costoDiarioCtx = document.getElementById('costoDiarioChart').getContext('2d');
+        new Chart(costoDiarioCtx, {
+            type: 'bar',
+            data: {
+                labels: ['CUBACAR (CUC)', 'REX (USD)'],
+                datasets: [{
+                    label: 'Costo Diario Base',
+                    data: [15, 20], // CUBACAR 15 CUC, REX 20 USD
+                    backgroundColor: ['rgba(54, 162, 235, 0.6)', 'rgba(255, 99, 132, 0.6)'],
+                    borderColor: ['rgba(54, 162, 235, 1)', 'rgba(255, 99, 132, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, title: { display: true, text: 'Costo (Moneda indicada)'} } },
+                plugins: { legend: { display: false }, title: {display: true, text: 'Costo Diario Base del Seguro'} }
+            }
+        });
+        
+        // Gráfico de Suplemento por Edad
+        const suplementoEdadCtx = document.getElementById('suplementoEdadChart').getContext('2d');
+        new Chart(suplementoEdadCtx, {
+            type: 'bar',
+            data: {
+                labels: ['REX (21-24, 76-80)', 'HAVANAUTOS (21-24, 76-80)'],
+                datasets: [{
+                    label: 'Suplemento Diario (USD)',
+                    data: [10, 13], // REX: 30 (total) - 20 (base) = 10 USD extra. Havanautos: 13 USD extra.
+                    backgroundColor: ['rgba(255, 159, 64, 0.6)', 'rgba(75, 192, 192, 0.6)'],
+                    borderColor: ['rgba(255, 159, 64, 1)', 'rgba(75, 192, 192, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, title: { display: true, text: 'Suplemento (USD)'} } },
+                plugins: { legend: { display: false }, title: {display: true, text: 'Suplemento Diario por Edad (USD)'} }
+            }
+        });
+
+        // Smooth scroll para anclas
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Activar link de navegación según scroll
+        const sections = document.querySelectorAll('section[id]');
+        window.addEventListener('scroll', navHighlighter);
+
+        function navHighlighter() {
+          let scrollY = window.pageYOffset;
+          sections.forEach(current => {
+            const sectionHeight = current.offsetHeight;
+            const sectionTop = current.offsetTop - 100; // Ajuste por header fijo
+            let sectionId = current.getAttribute('id');
+            
+            if (scrollY > sectionTop && scrollY <= sectionTop + sectionHeight){
+              document.querySelector('nav a[href*=' + sectionId + ']').classList.add('active', 'text-teal-600', 'border-teal-500');
+              document.querySelector('#mobile-menu a[href*=' + sectionId + ']').classList.add('active', 'text-teal-600', 'bg-teal-50');
+            } else {
+              document.querySelector('nav a[href*=' + sectionId + ']').classList.remove('active', 'text-teal-600', 'border-teal-500');
+              document.querySelector('#mobile-menu a[href*=' + sectionId + ']').classList.remove('active', 'text-teal-600', 'bg-teal-50');
+            }
+          });
+        }
+
+
+    </script>
+</body>
+</html>
